@@ -28,7 +28,8 @@ namespace kursovaya_rabota
             // Проверяем роль и отображаем кнопку админа
             if (userRole == "admin")
             {
-                btnAdminPanel.Visible = true;
+                btnAdminPanel.Visible = true; // Кнопка "для админа" отображается
+                btnSearchRecords.Text = "Поиск и редактирование записей";
             }
         }
 
@@ -85,7 +86,7 @@ namespace kursovaya_rabota
 
         private void btnSearchRecords_Click(object sender, EventArgs e) // Кнопка "Поиск записей"
         {
-            SearchForm searchForm = new SearchForm(this);
+            SearchForm searchForm = new SearchForm(this, userRole);
             this.Hide(); // Скрывает текущую форму MainForm (мы ее не закрываем, а скрываем для того, чтобы потом вернуться на нее)
             searchForm.ShowDialog();
         }

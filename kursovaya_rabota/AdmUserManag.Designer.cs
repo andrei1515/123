@@ -182,7 +182,7 @@
             // 
             this.btnDeleteUser.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnDeleteUser.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.btnDeleteUser.Location = new System.Drawing.Point(493, 404);
+            this.btnDeleteUser.Location = new System.Drawing.Point(468, 404);
             this.btnDeleteUser.Name = "btnDeleteUser";
             this.btnDeleteUser.Size = new System.Drawing.Size(161, 34);
             this.btnDeleteUser.TabIndex = 40;
@@ -194,7 +194,7 @@
             // 
             this.btnAddUser.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnAddUser.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.btnAddUser.Location = new System.Drawing.Point(181, 404);
+            this.btnAddUser.Location = new System.Drawing.Point(189, 404);
             this.btnAddUser.Name = "btnAddUser";
             this.btnAddUser.Size = new System.Drawing.Size(161, 34);
             this.btnAddUser.TabIndex = 41;

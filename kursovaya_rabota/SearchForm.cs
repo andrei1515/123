@@ -16,11 +16,46 @@ namespace kursovaya_rabota
     {
         private string connectionString = "Host=localhost;Port=5432;Database=kurs;Username=postgres;Password=qwerty"; // Строка подключения к бд
         private Form mainForm; // Переменная для хранения объекта MainForm
+        private string userRole; // Храним роль пользователя
 
-        public SearchForm(Form callingForm)
+
+        // Для админа, чтобы редактировать данные
+        private void dgvResults_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0) // Проверка, что изменение произошло не в заголовке и не за пределами таблицы
+            {
+                var row = dgvResults.Rows[e.RowIndex]; // Получаем строку, в которой произошло изменение
+                string columnName = dgvResults.Columns[e.ColumnIndex].Name; // Получаем имя изменённого столбца
+                var newValue = row.Cells[e.ColumnIndex].Value; // Получаем новое значение ячейки
+                var recordId = row.Cells["id"].Value; // Получаем значение поля id текущей строки
+
+                string tbl = cbRecordType.SelectedItem.ToString() == "Рождение" ? "birth_records" : "death_records"; // Выбор таблицы
+
+                // Устанавливаем соединение с базой данных
+                using (var conn = new NpgsqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    // Подготавливаем SQL-запрос на обновление одного поля
+                    string updateQuery = $"UPDATE {tbl} SET {columnName} = @value WHERE id = @id";
+
+                    using (var cmd = new NpgsqlCommand(updateQuery, conn))
+                    {
+                        // Передаём параметры
+                        cmd.Parameters.AddWithValue("value", newValue);
+                        cmd.Parameters.AddWithValue("id", recordId);
+                        cmd.ExecuteNonQuery(); // Выполняем запрос
+                    }
+                }
+            }
+        }
+
+        public SearchForm(Form callingForm, string role)
         {
             InitializeComponent();
             mainForm = callingForm; // callingForm покажет ту самую MainForm, с которой мы пришли
+            userRole = role; // Переменная для хранения роли
+
             this.FormBorderStyle = FormBorderStyle.None; // Убираем границы формы
             this.StartPosition = FormStartPosition.CenterScreen; // При запуске  формы она появляется в середине экрана
             dgvResults.AllowUserToAddRows = false; // Для того, чтобы убрать автоматически создавающуюся пустую строку в элементе датагриз
@@ -30,6 +65,18 @@ namespace kursovaya_rabota
             // Прописываем, что в поле элемента Combobox мы не сможем вводить данные вручную, а только выбирать из списка
             cbRecordType.DropDownStyle = ComboBoxStyle.DropDownList;
             lblNoResults.Visible = false; // Прячем надпись "Записи не найдено"
+
+            // Проверка, что текущий пользователь — админ
+            if (userRole != "admin")
+            {
+                dgvResults.ReadOnly = true; // В датагриз таблице доступно только чтение дял обычных пользователей
+            }
+
+            // Проверка, что текущий пользователь — админ
+            if (userRole == "admin")
+            {
+                dgvResults.ReadOnly = false; // В датагриз таблице доступно редактирование для админа
+            }
         }
 
         private void SearchForm_Load(object sender, EventArgs e)

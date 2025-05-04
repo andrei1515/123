@@ -193,6 +193,7 @@
             this.dgvResults.RowTemplate.Height = 24;
             this.dgvResults.Size = new System.Drawing.Size(762, 326);
             this.dgvResults.TabIndex = 38;
+            this.dgvResults.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvResults_CellValueChanged);
             // 
             // txtFirstName
             // 
