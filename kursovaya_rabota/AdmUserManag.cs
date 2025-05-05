@@ -13,13 +13,13 @@ namespace kursovaya_rabota
 {
     public partial class AdmUserManag : Form
     {
-        private Form admform; // Переменная для хранения объекта admform
+        private Form mainForm; // Переменная для хранения объекта MainForm
         private string connectionString = "Host=localhost;Port=5432;Database=kurs;Username=postgres;Password=qwerty"; // Строка подключения к бд
 
         public AdmUserManag(Form callingForm)
         {
             InitializeComponent();
-            admform = callingForm; // callingForm покажет ту самую AdminForm, с которой мы пришли
+            mainForm = callingForm; // callingForm покажет ту самую AdminForm, с которой мы пришли
             LoadUsers();
 
             this.FormBorderStyle = FormBorderStyle.None; // Убираем границы формы
@@ -184,7 +184,7 @@ namespace kursovaya_rabota
         private void nazad_Click(object sender, EventArgs e) // Кнопка "назад" (стрелочка)
         {
             this.Hide(); // Скрытие данной формы
-            admform.Show(); // Показ формы MainForm (ссылаемся на нее)
+            mainForm.Show(); // Показ формы MainForm (ссылаемся на нее)
             this.Close(); // Закрытие данной формы
         }
 

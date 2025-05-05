@@ -93,9 +93,9 @@ namespace kursovaya_rabota
 
         private void btnAdminPanel_Click(object sender, EventArgs e) // Кнопка "Для админа"
         {
-            AdminForm admform = new AdminForm(this);
+            AdmUserManag admusermanag = new AdmUserManag(this);
             this.Hide(); // Скрывает текущую форму MainForm (мы ее не закрываем, а скрываем для того, чтобы потом вернуться на нее)
-            admform.ShowDialog();
+            admusermanag.ShowDialog();
         }
 
         private void btnLogout_Click_Click(object sender, EventArgs e) // // Кнопка "Выход"
