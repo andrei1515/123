@@ -32,8 +32,8 @@
             this.topPanel = new System.Windows.Forms.Panel();
             this.CloseApplication = new System.Windows.Forms.Button();
             this.nazad = new System.Windows.Forms.Button();
-            this.btnLogout = new System.Windows.Forms.Button();
             this.o_programme = new System.Windows.Forms.Label();
+            this.btnLogout = new System.Windows.Forms.Button();
             this.labelInfa = new System.Windows.Forms.Label();
             this.topPanel.SuspendLayout();
             this.SuspendLayout();
@@ -83,6 +83,16 @@
             this.nazad.UseVisualStyleBackColor = false;
             this.nazad.Click += new System.EventHandler(this.nazad_Click);
             // 
+            // o_programme
+            // 
+            this.o_programme.AutoSize = true;
+            this.o_programme.Font = new System.Drawing.Font("Microsoft Tai Le", 13.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.o_programme.Location = new System.Drawing.Point(318, 12);
+            this.o_programme.Name = "o_programme";
+            this.o_programme.Size = new System.Drawing.Size(162, 27);
+            this.o_programme.TabIndex = 13;
+            this.o_programme.Text = "О программе";
+            // 
             // btnLogout
             // 
             this.btnLogout.BackColor = System.Drawing.Color.Transparent;
@@ -97,16 +107,6 @@
             this.btnLogout.TabIndex = 0;
             this.btnLogout.UseVisualStyleBackColor = false;
             this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
-            // 
-            // o_programme
-            // 
-            this.o_programme.AutoSize = true;
-            this.o_programme.Font = new System.Drawing.Font("Microsoft Tai Le", 13.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.o_programme.Location = new System.Drawing.Point(318, 12);
-            this.o_programme.Name = "o_programme";
-            this.o_programme.Size = new System.Drawing.Size(162, 27);
-            this.o_programme.TabIndex = 13;
-            this.o_programme.Text = "О программе";
             // 
             // labelInfa
             // 

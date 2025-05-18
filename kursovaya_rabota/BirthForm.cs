@@ -3,11 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
+using System.IO;
 
 namespace kursovaya_rabota
 {
@@ -228,7 +233,7 @@ namespace kursovaya_rabota
                 // Получаем новые номера записи и свидетельства
                 // Обе переменные изначально ставятся в 1, на случай, если в базе данных нет записей - у нас всё равно был номер 1
                 int newRecordNumber = 1;
-                int newCertificateNumber = 1;
+                int newCertificateNumber = 100000; // Если записей нет, то стартовое значение
 
                 // Находим самый большой номер записи и свидетельства
                 using (var cmdLast = new NpgsqlCommand("SELECT MAX(record_number), MAX(certificate_number) FROM birth_records", conn))
@@ -238,7 +243,9 @@ namespace kursovaya_rabota
                     {
                         // Проверяем, пустое ли значение в первой колонке, если да - ставим 1, если нет - берем самое большое значение + 1
                         newRecordNumber = reader.IsDBNull(0) ? 1 : reader.GetInt32(0) + 1;
-                        newCertificateNumber = reader.IsDBNull(1) ? 1 : reader.GetInt32(1) + 1;
+
+                        // Если в базе данных нет записей, начинается с 100000, иначе +1 от последнего
+                        newCertificateNumber = reader.IsDBNull(1) ? 100000 : reader.GetInt32(1) + 1;
                     }
                 }
 
@@ -291,8 +298,87 @@ namespace kursovaya_rabota
                     cmd.ExecuteNonQuery(); // Выполнение запроса на сервере
                 }
 
+                CreateBirthCertificate();
+
                 // Уведомление
-                MessageBox.Show("Запись успешно добавлена!", "Успех", MessageBoxButtons.OK);
+                MessageBox.Show("Запись успешно добавлена и свидетельство создано!", "Успех", MessageBoxButtons.OK);
+            }
+        }
+
+        private void CreateBirthCertificate() // Метод, который создает пдф файл и вносит туда сохраненные данные
+        {
+            // Подключаемся к бд
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Получаем новые номера записи и свидетельства
+                // Обе переменные изначально ставятся в 1, на случай, если в базе данных нет записей - у нас всё равно был номер 1
+                int newRecordNumber = 1;
+                int newCertificateNumber = 100000; // Если записей нет, то стартовое значение
+
+
+                // Находим самый большой номер записи и свидетельства
+                using (var cmdLast = new NpgsqlCommand("SELECT MAX(record_number), MAX(certificate_number) FROM birth_records", conn))
+                using (var reader = cmdLast.ExecuteReader()) // Переменная для хранения прочитанного запроса
+                {
+                    if (reader.Read()) // Читаем первую строку результата запроса
+                    {
+                        // Проверяем, пустое ли значение в первой колонке, если да - ставим 1, если нет - берем самое большое значение + 1
+                        newRecordNumber = reader.IsDBNull(0) ? 1 : reader.GetInt32(0) + 1;
+
+                        // Если в базе данных нет записей, начинается с 100000, иначе +1 от последнего
+                        newCertificateNumber = reader.IsDBNull(1) ? 100000 : reader.GetInt32(1) + 1;
+                    }
+                }
+
+                // Данные ребёнка
+                string childLastName = txtChildLastName.Text.Trim();
+                string childFirstName = txtChildFirstName.Text.Trim();
+                string childPatronymic = txtChildPatronymic.Text.Trim();
+                string childBirthDate = dtpChildBirth.Value.ToString("dd.MM.yyyy");
+                string childBirthPlace = txtBirthPlace.Text.Trim();
+                string gender = cbGender.SelectedItem?.ToString();
+
+                // Данные матери
+                string motherFullName = $"{txtMotherLastName.Text.Trim()} {txtMotherFirstName.Text.Trim()} {txtMotherPatronymic.Text.Trim()}";
+                string motherBirthDate = dtpMotherBirth.Value.ToString("dd.MM.yyyy");
+                string motherBirthPlace = txtMotherPlace.Text.Trim();
+
+                // Данные отца
+                string fatherFullName = $"{txtFatherLastName.Text.Trim()} {txtFatherFirstName.Text.Trim()} {txtFatherPatronymic.Text.Trim()}";
+                string fatherBirthDate = dtpFatherBirth.Value.ToString("dd.MM.yyyy");
+                string fatherBirthPlace = txtFatherPlace.Text.Trim();
+
+                // Создание PDF документа
+                PdfDocument document = new PdfDocument(); // Создаётся новый экземпляр PDF-документа
+                PdfPage page = document.AddPage(); // Добавление страницы в документ
+                XGraphics gfx = XGraphics.FromPdfPage(page); // Создаётся объект XGraphics, который используется для рисования текста, линий, изображений и других элементов на странице
+                XFont fontTitle = new XFont("Arial", 20); // Шрифт для заголовка
+                XFont fontText = new XFont("Arial", 12); //  Шрифт для основного текста
+
+                /// <summary>
+                /// Тут прописываем элементы и текст, которые будут располагаться в документе
+                /// </summary>
+                // fontTitle или fontText — шрифт 
+                // XBrushes.Black — цвет текста(например, чёрный)
+                // XRect - определение области для элемента; координаты по горизонтали и вертикали; page.Width - задает ширину области для текста; page.Height - задает высоту области для текста 
+                // XStringFormats.TopCenter — выравнивание текста по центру
+
+                gfx.DrawString("Свидетельство о рождении", fontTitle, XBrushes.Black, new XRect(0, 40, page.Width, page.Height), XStringFormats.TopCenter);
+                gfx.DrawString($"ФИО ребенка: {childLastName} {childFirstName} {childPatronymic}", fontText, XBrushes.Black, new XRect(40, 100, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Дата рождения: {childBirthDate}", fontText, XBrushes.Black, new XRect(40, 140, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Место рождения: {childBirthPlace}", fontText, XBrushes.Black, new XRect(40, 180, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Пол: {gender}", fontText, XBrushes.Black, new XRect(40, 220, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Мать: {motherFullName}, Дата рождения: {motherBirthDate}, Место рождения: {motherBirthPlace}", fontText, XBrushes.Black, new XRect(40, 260, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Отец: {fatherFullName}, Дата рождения: {fatherBirthDate}, Место рождения: {fatherBirthPlace}", fontText, XBrushes.Black, new XRect(40, 300, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Номер записи акта: {newRecordNumber}", fontText, XBrushes.Black, new XRect(40, 340, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Номер свидетельства: {newCertificateNumber}", fontText, XBrushes.Black, new XRect(40, 380, page.Width, page.Height), XStringFormats.TopLeft);
+
+                // Сохранение PDF в папку Загрузки
+                string downloadsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"); // путь к папке "Загрузки"
+                string filename = Path.Combine(downloadsPath, $"Свидетельство_о_рождении_{childLastName}_{childFirstName}.pdf"); // Полное имя файла
+                document.Save(filename); // Сохранение документа по указанному пути
             }
         }
 

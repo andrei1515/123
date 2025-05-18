@@ -162,6 +162,14 @@ namespace kursovaya_rabota
             }
 
             int userId = Convert.ToInt32(dgvUsers.SelectedRows[0].Cells["id"].Value); // Получаем id выбранного пользователя из таблицы. Cells — доступ ко всем ячейкам выбранной строки
+            string selectedLogin = dgvUsers.SelectedRows[0].Cells["role"].Value.ToString();
+
+            // Проверяем, не пытается ли админ удалить сам себя
+            if (selectedLogin == "admin")
+            {
+                MessageBox.Show("Вы не можете удалить свой собственный аккаунт.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             // Показываем окно подтверждения. Если пользователь нажал "Нет" — выход из метода
             DialogResult result = MessageBox.Show("Вы уверены, что хотите удалить пользователя?", "Подтверждение", MessageBoxButtons.YesNo);

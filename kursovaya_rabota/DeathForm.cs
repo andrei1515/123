@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
 
 namespace kursovaya_rabota
 {
@@ -328,7 +331,7 @@ namespace kursovaya_rabota
                 // Получаем новые номера записи и свидетельства
                 // Обе переменные изначально ставятся в 1, на случай, если в базе данных нет записей - у нас всё равно был номер 1
                 int RecordNumber = 1;
-                int CertificateNumber = 1;
+                int CertificateNumber = 100000;
 
                 // Находим самый большой номер записи и свидетельства
                 using (var cmdLast = new NpgsqlCommand("SELECT MAX(record_number), MAX(certificate_number) FROM death_records", conn))
@@ -338,7 +341,7 @@ namespace kursovaya_rabota
                     {
                         // Проверяем, пустое ли значение в первой колонке, если да - ставим 1, если нет - берем самое большое значение + 1
                         RecordNumber = reader.IsDBNull(0) ? 1 : reader.GetInt32(0) + 1;
-                        CertificateNumber = reader.IsDBNull(1) ? 1 : reader.GetInt32(1) + 1;
+                        CertificateNumber = reader.IsDBNull(1) ? 100000 : reader.GetInt32(1) + 1;
                     }
                 }
 
@@ -387,11 +390,82 @@ namespace kursovaya_rabota
                     cmd.ExecuteNonQuery(); // Выполнение запроса
                 }
 
+                CreateBirthCertificate(); // Вызов метода
+
                 // Уведомление
                 MessageBox.Show("Запись успешно добавлена!", "Успех", MessageBoxButtons.OK);
             }
         }
 
+        private void CreateBirthCertificate() // Метод, который создает пдф файл и вносит туда сохраненные данные
+        {
+            // Подключаемся к бд
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // Получаем новые номера записи и свидетельства
+                // Обе переменные изначально ставятся в 1, на случай, если в базе данных нет записей - у нас всё равно был номер 1
+                int RecordNumber = 1;
+                int CertificateNumber = 100000;
+
+                // Находим самый большой номер записи и свидетельства
+                using (var cmdLast = new NpgsqlCommand("SELECT MAX(record_number), MAX(certificate_number) FROM death_records", conn))
+                using (var reader = cmdLast.ExecuteReader()) // Переменная для хранения прочитанного запроса
+                {
+                    if (reader.Read()) // Читаем первую строку результата запроса
+                    {
+                        // Проверяем, пустое ли значение в первой колонке, если да - ставим 1, если нет - берем самое большое значение + 1
+                        RecordNumber = reader.IsDBNull(0) ? 1 : reader.GetInt32(0) + 1;
+                        CertificateNumber = reader.IsDBNull(1) ? 100000 : reader.GetInt32(1) + 1;
+                    }
+                }
+
+                // Данные "Сведения об умершем"
+                string LastName = txtChildLastName.Text.Trim(); // В переменую записывается фамилия
+                string FirstName = txtChildFirstName.Text.Trim(); // В переменую записывается имя
+                string Patronymic = txtChildPatronymic.Text.Trim(); // В переменую записывается отчество
+                string BirthPlace = txtBirthPlace.Text.Trim(); // В переменую записывается место рождения
+                string DeathPlace = txtDeathPlace.Text.Trim(); // В переменую записывается место смерти
+                string gender = cbGender.SelectedItem?.ToString(); /* В переменую записывается пол,
+                SelectedItem возвращает объект, который выбран в списке, ToString - преобразует элемент в строку */
+
+                // Данные паспорта
+                string SeriesPasport = txtSeriesPasport.Text.Trim(); // В переменую записывается серия паспорта
+                string NumberPasport = txtNumberPasport.Text.Trim(); // В переменую записывается номер паспорта
+                string Extradition = txtExtradition.Text.Trim(); // В переменую записывается кем был выдан паспорт
+
+                // Создание PDF документа
+                PdfDocument document = new PdfDocument(); // Создаётся новый экземпляр PDF-документа
+                PdfPage page = document.AddPage(); // Добавление страницы в документ
+                XGraphics gfx = XGraphics.FromPdfPage(page); // Создаётся объект XGraphics, который используется для рисования текста, линий, изображений и других элементов на странице
+                XFont fontTitle = new XFont("Arial", 20); // Шрифт для заголовка
+                XFont fontText = new XFont("Arial", 12); //  Шрифт для основного текста
+
+                /// <summary>
+                /// Тут прописываем элементы и текст, которые будут располагаться в документе
+                /// </summary>
+                // fontTitle или fontText — шрифт 
+                // XBrushes.Black — цвет текста(например, чёрный)
+                // XRect - определение области для элемента; координаты по горизонтали и вертикали; page.Width - задает ширину области для текста; page.Height - задает высоту области для текста 
+                // XStringFormats.TopCenter — выравнивание текста по центру
+
+                gfx.DrawString("Свидетельство о смерти", fontTitle, XBrushes.Black, new XRect(0, 40, page.Width, page.Height), XStringFormats.TopCenter);
+                gfx.DrawString($"ФИО умершего: {LastName} {FirstName} {Patronymic}", fontText, XBrushes.Black, new XRect(40, 100, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Дата рождения: {BirthPlace}", fontText, XBrushes.Black, new XRect(40, 140, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Место рождения: {DeathPlace}", fontText, XBrushes.Black, new XRect(40, 180, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Пол: {gender}", fontText, XBrushes.Black, new XRect(40, 220, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Серия и номер паспорта: {SeriesPasport} {NumberPasport}", fontText, XBrushes.Black, new XRect(40, 260, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Паспорт выдан: {Extradition}", fontText, XBrushes.Black, new XRect(40, 300, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Номер записи акта: {RecordNumber}", fontText, XBrushes.Black, new XRect(40, 340, page.Width, page.Height), XStringFormats.TopLeft);
+                gfx.DrawString($"Номер свидетельства: {CertificateNumber}", fontText, XBrushes.Black, new XRect(40, 380, page.Width, page.Height), XStringFormats.TopLeft);
+
+                // Сохранение PDF в папку Загрузки
+                string downloadsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"); // путь к папке "Загрузки"
+                string filename = Path.Combine(downloadsPath, $"Свидетельство_о_смерти_{LastName}_{FirstName}.pdf"); // Полное имя файла
+                document.Save(filename); // Сохранение документа по указанному пути
+            }
+        }
 
         private void nazad_Click(object sender, EventArgs e) // Кнопка "назад" (стрелочка)
         {
